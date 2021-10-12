@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import { Transform, TransformOptions, TransformCallback } from 'stream';
-import { rawFormat, SnpInfo } from './raw.models';
+import { chr, rawFormat, SnpInfo } from './raw.models';
 /**
  * 2010-08-Y-3314,0,0,--
  * rs4475691       1       846808  CC
@@ -21,6 +21,7 @@ export declare class RawFormatNormalizerTransform extends Transform {
     warnings: Set<string>;
     lineCount: number;
     snpInfo: SnpInfo;
+    chromosomes: Set<chr>;
     constructor(opts?: TransformOptions);
     private log;
     private warn;

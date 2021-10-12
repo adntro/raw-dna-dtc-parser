@@ -1,11 +1,12 @@
 import {Transform, TransformOptions, TransformCallback} from 'stream';
-import {gender, rawFormat, SnpInfo, ValidationInfo} from './raw.models';
+import {chr, gender, rawFormat, SnpInfo, ValidationInfo} from './raw.models';
 import {checkBuildForSnp} from './utils/genome-build';
 import {
   ERROR_GENOME_BUILD_MIX,
   ERROR_GENOME_BUILD_NOT_DETECTED,
   ERROR_GENOME_BUILD_NOT_ENOUGH,
   ERROR_HET_RATIO,
+  ERROR_MISSING_CHROMOSOMES
 } from './raw.errors';
 import {convertLine2Snp} from './utils/raw-line-parser';
 import {isAutosomal} from './utils/snp-utils';
@@ -63,6 +64,8 @@ export class RawFormatNormalizerTransform extends Transform {
     b37: 0,
     b38: 0,
   };
+
+  chromosomes = new Set<chr>();
 
   constructor(opts?: TransformOptions) {
     super(opts);
@@ -126,6 +129,7 @@ export class RawFormatNormalizerTransform extends Transform {
         if (snp.warn) {
           this.warn(snp.warn);
         }
+        this.chromosomes.add(snp.chr);
         // build 37 38
         const build = checkBuildForSnp(snp);
         if (build === 'b37') this.snpInfo.b37++;
@@ -151,6 +155,9 @@ export class RawFormatNormalizerTransform extends Transform {
       gender = 'M';
     }
     // ERROR CHECKS
+    if (this.chromosomes.size < 23) {
+      errors.push(ERROR_MISSING_CHROMOSOMES);
+    }
     if (this.snpInfo.b37 > 0 && this.snpInfo.b38 > 0) {
       errors.push(ERROR_GENOME_BUILD_MIX);
     } else if (this.snpInfo.b37 === 0 && this.snpInfo.b38 === 0) {
@@ -170,13 +177,17 @@ export class RawFormatNormalizerTransform extends Transform {
       errors,
       warnings,
     };
-    this.emit(EVENTS.INFO, validationInfo);
-    this.emit(EVENTS.WARNS, warnings);
-    this.log(
-      'FILE INFO: ',
-      JSON.stringify(validationInfo),
-      `Warnings: ${this.warnings.size}. ${warnings.join('; ')}`
-    );
+    if (errors.length > 0) {
+      this.emit('error', 'Errors found in sample ' + errors.join(';'));
+    } else {
+      this.emit(EVENTS.INFO, validationInfo);
+      this.emit(EVENTS.WARNS, warnings);
+      this.log(
+        'FILE INFO: ',
+        JSON.stringify(validationInfo),
+        `Warnings: ${this.warnings.size}. ${warnings.join('; ')}`
+      );
+    }
     callback();
   }
 }

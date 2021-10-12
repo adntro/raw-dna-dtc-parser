@@ -7,6 +7,8 @@ function cleanGenotypeLine(line) {
 }
 exports.cleanGenotypeLine = cleanGenotypeLine;
 function convertLine2Snp(line) {
+    if (('' + line).length > 60)
+        throw new Error('invalid snp line length');
     const [rsid, chrStr, posStr, base1, base2, extra] = cleanGenotypeLine(line).split('\t');
     const chrNum = parseInt(chrStr, 10);
     const chr = chrNum === 23
@@ -23,14 +25,14 @@ function convertLine2Snp(line) {
     let a1 = '-';
     let a2 = undefined;
     if (isNaN(position) || position <= 0)
-        throw new Error('cannot parse SNP. Position not valid: ' + posStr);
+        throw new Error('cannot parse SNP. Position not valid');
     if (extra) {
-        warn = 'Extra info: ' + extra;
+        warn = 'unexpected extra info';
     }
     if (base1 && base1.length === 2) {
         // lo normal
         if (base2 && base2.length > 0) {
-            warn = 'base 2: ' + base2;
+            warn = 'unexpected base 2';
         }
         a1 = base1[0];
         a2 = base1[1];

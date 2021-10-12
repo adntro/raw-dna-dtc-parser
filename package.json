@@ -1,6 +1,6 @@
 {
   "name": "@adntro/raw-dna-dtc-parser",
-  "version": "0.0.2",
+  "version": "0.0.5",
   "description": "DNA file reader (in DTC formats) and parser",
   "author": "Adntro Genetics SL",
   "repository": {
@@ -25,6 +25,7 @@
     "fix": "gts fix",
     "prepare": "npm run compile",
     "pretest": "npm run compile",
+    "prepublish": "npm run compile",
     "posttest": "npm run lint"
   },
   "devDependencies": {

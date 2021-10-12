@@ -61,6 +61,7 @@ class RawFormatNormalizerTransform extends stream_1.Transform {
             b37: 0,
             b38: 0,
         };
+        this.chromosomes = new Set();
         this.on(exports.EVENTS.HEADER, header => {
             this.format = guessFormat(header);
         });
@@ -117,6 +118,7 @@ class RawFormatNormalizerTransform extends stream_1.Transform {
                 if (snp.warn) {
                     this.warn(snp.warn);
                 }
+                this.chromosomes.add(snp.chr);
                 // build 37 38
                 const build = genome_build_1.checkBuildForSnp(snp);
                 if (build === 'b37')
@@ -142,6 +144,9 @@ class RawFormatNormalizerTransform extends stream_1.Transform {
             gender = 'M';
         }
         // ERROR CHECKS
+        if (this.chromosomes.size < 23) {
+            errors.push(raw_errors_1.ERROR_MISSING_CHROMOSOMES);
+        }
         if (this.snpInfo.b37 > 0 && this.snpInfo.b38 > 0) {
             errors.push(raw_errors_1.ERROR_GENOME_BUILD_MIX);
         }
@@ -163,9 +168,14 @@ class RawFormatNormalizerTransform extends stream_1.Transform {
             errors,
             warnings,
         };
-        this.emit(exports.EVENTS.INFO, validationInfo);
-        this.emit(exports.EVENTS.WARNS, warnings);
-        this.log('FILE INFO: ', JSON.stringify(validationInfo), `Warnings: ${this.warnings.size}. ${warnings.join('; ')}`);
+        if (errors.length > 0) {
+            this.emit('error', 'Errors found in sample ' + errors.join(';'));
+        }
+        else {
+            this.emit(exports.EVENTS.INFO, validationInfo);
+            this.emit(exports.EVENTS.WARNS, warnings);
+            this.log('FILE INFO: ', JSON.stringify(validationInfo), `Warnings: ${this.warnings.size}. ${warnings.join('; ')}`);
+        }
         callback();
     }
 }
