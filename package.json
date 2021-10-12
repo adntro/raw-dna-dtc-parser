@@ -1,11 +1,11 @@
 {
-  "name": "",
-  "version": "0.0.0",
-  "description": "",
+  "name": "@adntro/raw-dna-dtc-parser",
+  "version": "0.0.2",
+  "description": "DNA file reader (in DTC formats) and parser",
   "author": "Adntro Genetics SL",
   "repository": {
     "type": "git",
-    "url": "https://github.com/adntro/typescript-initializer"
+    "url": "https://github.com/adntro/raw-dna-dtc-parser"
   },
   "main": "build/src/index.js",
   "types": "build/src/index.d.ts",
