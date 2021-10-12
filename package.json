@@ -1,0 +1,38 @@
+{
+  "name": "",
+  "version": "0.0.0",
+  "description": "",
+  "author": "Adntro Genetics SL",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/adntro/typescript-initializer"
+  },
+  "main": "build/src/index.js",
+  "types": "build/src/index.d.ts",
+  "files": [
+    "build/src"
+  ],
+  "engines": {
+    "node": ">=10.0.0"
+  },
+  "license": "MIT",
+  "keywords": [],
+  "scripts": {
+    "test": "c8 mocha build/test",
+    "lint": "gts lint",
+    "clean": "gts clean",
+    "compile": "tsc",
+    "fix": "gts fix",
+    "prepare": "npm run compile",
+    "pretest": "npm run compile",
+    "posttest": "npm run lint"
+  },
+  "devDependencies": {
+    "@types/mocha": "^8.2.2",
+    "@types/node": "^14.11.2",
+    "c8": "^7.7.3",
+    "gts": "^3.1.0",
+    "mocha": "^9.0.1",
+    "typescript": "^4.0.3"
+  }
+}
