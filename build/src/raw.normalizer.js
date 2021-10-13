@@ -168,14 +168,9 @@ class RawFormatNormalizerTransform extends stream_1.Transform {
             errors,
             warnings,
         };
-        if (errors.length > 0) {
-            this.emit('error', 'Errors found in sample ' + errors.join(';'));
-        }
-        else {
-            this.emit(exports.EVENTS.INFO, validationInfo);
-            this.emit(exports.EVENTS.WARNS, warnings);
-            this.log('FILE INFO: ', JSON.stringify(validationInfo), `Warnings: ${this.warnings.size}. ${warnings.join('; ')}`);
-        }
+        this.emit(exports.EVENTS.INFO, validationInfo);
+        this.emit(exports.EVENTS.WARNS, warnings);
+        this.log('FILE INFO: ', JSON.stringify(validationInfo), `Warnings: ${this.warnings.size}. ${warnings.join('; ')}`);
         callback();
     }
 }

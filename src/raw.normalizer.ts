@@ -177,17 +177,13 @@ export class RawFormatNormalizerTransform extends Transform {
       errors,
       warnings,
     };
-    if (errors.length > 0) {
-      this.emit('error', 'Errors found in sample ' + errors.join(';'));
-    } else {
-      this.emit(EVENTS.INFO, validationInfo);
-      this.emit(EVENTS.WARNS, warnings);
-      this.log(
-        'FILE INFO: ',
-        JSON.stringify(validationInfo),
-        `Warnings: ${this.warnings.size}. ${warnings.join('; ')}`
-      );
-    }
+    this.emit(EVENTS.INFO, validationInfo);
+    this.emit(EVENTS.WARNS, warnings);
+    this.log(
+      'FILE INFO: ',
+      JSON.stringify(validationInfo),
+      `Warnings: ${this.warnings.size}. ${warnings.join('; ')}`
+    );
     callback();
   }
 }
