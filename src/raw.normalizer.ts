@@ -106,6 +106,7 @@ export class RawFormatNormalizerTransform extends Transform {
     if (this.genotypeStarted) {
       try {
         const snp = convertLine2Snp(str);
+        if (snp.chr === 'XY') throw new Error('Skip pseudoautosomal XY');
         this.push(
           `${snp.rsid}\t${snp.chr}\t${snp.position}\t${snp.a1}${
             snp.a2 ? snp.a2 : ''

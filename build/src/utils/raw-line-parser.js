@@ -6,20 +6,24 @@ function cleanGenotypeLine(line) {
     return line.replace(/"/g, '').replace(/,|;/g, ' ').replace(/\s+/g, '\t');
 }
 exports.cleanGenotypeLine = cleanGenotypeLine;
+/**
+ *   mapper['X'] = 23
+  mapper['Y'] = 24
+  mapper['XY'] = 25
+  mapper['MT'] = 26
+ */
 function convertLine2Snp(line) {
     if (('' + line).length > 60)
         throw new Error('invalid snp line length');
     const [rsid, chrStr, posStr, base1, base2, extra] = cleanGenotypeLine(line).split('\t');
     const chrNum = parseInt(chrStr, 10);
-    const chr = chrNum === 23
-        ? 'X'
-        : chrNum === 24
-            ? 'Y'
-            : chrNum === 25
-                ? 'MT'
-                : !isNaN(chrNum) && chrNum > 0
-                    ? chrNum.toFixed(0)
-                    : chrStr;
+    const chr = chrNum === 23 ? 'X'
+        : chrNum === 24 ? 'Y'
+            : chrNum === 25 ? 'XY' //XY AncestryDNA
+                : chrNum === 26 ? 'MT'
+                    : !isNaN(chrNum) && chrNum > 0
+                        ? chrNum.toFixed(0)
+                        : chrStr;
     const position = parseInt(posStr, 10);
     let warn = undefined;
     let a1 = '-';
@@ -51,6 +55,9 @@ function convertLine2Snp(line) {
     const nocall = a1 === '-';
     if (nocall) {
         a2 = '-';
+    }
+    else if (chr === 'Y' || chr === 'XY' || chr === 'MT') {
+        a2 = undefined;
     }
     return {
         rsid,

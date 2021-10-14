@@ -92,6 +92,8 @@ class RawFormatNormalizerTransform extends stream_1.Transform {
         if (this.genotypeStarted) {
             try {
                 const snp = raw_line_parser_1.convertLine2Snp(str);
+                if (snp.chr === 'XY')
+                    throw new Error('Skip pseudoautosomal XY');
                 this.push(`${snp.rsid}\t${snp.chr}\t${snp.position}\t${snp.a1}${snp.a2 ? snp.a2 : ''}\n`);
                 if (snp_utils_1.isAutosomal(snp.chr)) {
                     if (snp.nocall)
