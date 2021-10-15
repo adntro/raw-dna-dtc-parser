@@ -52,12 +52,18 @@ function convertLine2Snp(line) {
     else {
         throw new Error(`Not valid SNP: ${rsid}, ${chr}, pos: ${position} "${base1}"  "${base2}" `);
     }
+    if ('' + a1 === '0') {
+        a1 = '-';
+    }
     const nocall = a1 === '-';
-    if (nocall) {
+    if (chr === 'Y' || chr === 'XY' || chr === 'MT') {
+        a2 = undefined;
+    }
+    else if (nocall) {
         a2 = '-';
     }
-    else if (chr === 'Y' || chr === 'XY' || chr === 'MT') {
-        a2 = undefined;
+    else if (a2 && a1 > a2) {
+        [a1, a2] = [a2, a1];
     }
     return {
         rsid,

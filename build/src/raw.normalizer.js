@@ -46,6 +46,7 @@ class RawFormatNormalizerTransform extends stream_1.Transform {
         this.genotypeStarted = false;
         this.headerLines = [];
         this.format = 'other';
+        this.debug = false;
         this.warnings = new Set();
         this.lineCount = 0;
         this.snpInfo = {
@@ -62,12 +63,15 @@ class RawFormatNormalizerTransform extends stream_1.Transform {
             b38: 0,
         };
         this.chromosomes = new Set();
+        if ((opts === null || opts === void 0 ? void 0 : opts.debug) === true)
+            this.debug = true;
         this.on(exports.EVENTS.HEADER, header => {
             this.format = guessFormat(header);
         });
     }
     log(...msg) {
-        console.log(...['DEBUG -> ', ...msg]);
+        if (this.debug)
+            console.log(...['DEBUG -> ', ...msg]);
     }
     warn(msg) {
         this.emit(exports.EVENTS.WARN, msg);

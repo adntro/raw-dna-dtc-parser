@@ -42,10 +42,15 @@ export function guessFormat(header: string): rawFormat {
   }
 }
 
+export interface RawFormatNormalizerTransformOptions extends TransformOptions {
+  debug: boolean;
+}
+
 export class RawFormatNormalizerTransform extends Transform {
   genotypeStarted = false;
   headerLines: string[] = [];
   format: rawFormat = 'other';
+  debug = false;
 
   warnings = new Set<string>();
 
@@ -67,15 +72,16 @@ export class RawFormatNormalizerTransform extends Transform {
 
   chromosomes = new Set<chr>();
 
-  constructor(opts?: TransformOptions) {
+  constructor(opts?: RawFormatNormalizerTransformOptions) {
     super(opts);
+    if (opts?.debug === true) this.debug = true;
     this.on(EVENTS.HEADER, header => {
       this.format = guessFormat(header);
     });
   }
 
   private log(...msg: any[]) {
-    console.log(...['DEBUG -> ', ...msg]);
+    if (this.debug)  console.log(...['DEBUG -> ', ...msg]);
   }
 
   private warn(msg: string): void {

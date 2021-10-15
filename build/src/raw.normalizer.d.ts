@@ -14,15 +14,19 @@ export declare const EVENTS: {
     WARNS: string;
 };
 export declare function guessFormat(header: string): rawFormat;
+export interface RawFormatNormalizerTransformOptions extends TransformOptions {
+    debug: boolean;
+}
 export declare class RawFormatNormalizerTransform extends Transform {
     genotypeStarted: boolean;
     headerLines: string[];
     format: rawFormat;
+    debug: boolean;
     warnings: Set<string>;
     lineCount: number;
     snpInfo: SnpInfo;
     chromosomes: Set<chr>;
-    constructor(opts?: TransformOptions);
+    constructor(opts?: RawFormatNormalizerTransformOptions);
     private log;
     private warn;
     _transform(chunk: any, encoding: BufferEncoding, callback: TransformCallback): void;
