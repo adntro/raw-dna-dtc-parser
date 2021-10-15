@@ -16,12 +16,14 @@ export declare const EVENTS: {
 export declare function guessFormat(header: string): rawFormat;
 export interface RawFormatNormalizerTransformOptions extends TransformOptions {
     debug: boolean;
+    checkBuild: boolean;
 }
 export declare class RawFormatNormalizerTransform extends Transform {
     genotypeStarted: boolean;
     headerLines: string[];
     format: rawFormat;
     debug: boolean;
+    checkBuild: boolean;
     warnings: Set<string>;
     lineCount: number;
     snpInfo: SnpInfo;

@@ -1,18 +1,28 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.convertLine2Snp = exports.cleanGenotypeLine = void 0;
+exports.convertLine2SnpGeneric = exports.convertLine2Snp = exports.cleanGenotypeLine = void 0;
 const snp_utils_1 = require("./snp-utils");
 function cleanGenotypeLine(line) {
     return line.replace(/"/g, '').replace(/,|;/g, ' ').replace(/\s+/g, '\t');
 }
 exports.cleanGenotypeLine = cleanGenotypeLine;
 /**
- *   mapper['X'] = 23
+ * 2010-08-Y-3314,0,0,--
+ * rs4475691       1       846808  CC
+ * "rs11240777","1","798959","AG"
+ * rs199474699	26	15990	C	C
+ */
+function convertLine2Snp(line) {
+    return convertLine2SnpGeneric(line);
+}
+exports.convertLine2Snp = convertLine2Snp;
+/**
+  mapper['X'] = 23
   mapper['Y'] = 24
   mapper['XY'] = 25
   mapper['MT'] = 26
  */
-function convertLine2Snp(line) {
+function convertLine2SnpGeneric(line) {
     if (('' + line).length > 60)
         throw new Error('invalid snp line length');
     const [rsid, chrStr, posStr, base1, base2, extra] = cleanGenotypeLine(line).split('\t');
@@ -75,5 +85,5 @@ function convertLine2Snp(line) {
         warn,
     };
 }
-exports.convertLine2Snp = convertLine2Snp;
+exports.convertLine2SnpGeneric = convertLine2SnpGeneric;
 //# sourceMappingURL=raw-line-parser.js.map

@@ -1,6 +1,6 @@
 {
   "name": "@adntro/raw-dna-dtc-parser",
-  "version": "0.0.12",
+  "version": "0.1.0",
   "description": "DNA file reader (in DTC formats) and parser",
   "author": "Adntro Genetics SL",
   "repository": {

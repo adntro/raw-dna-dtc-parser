@@ -1,5 +1,5 @@
 import {Transform, TransformOptions, TransformCallback} from 'stream';
-import {chr, gender, rawFormat, SnpInfo, ValidationInfo} from './raw.models';
+import {chr, gender, rawFormat, Snp, SnpInfo, ValidationInfo} from './raw.models';
 import {checkBuildForSnp} from './utils/genome-build';
 import {
   ERROR_GENOME_BUILD_MIX,
@@ -44,13 +44,16 @@ export function guessFormat(header: string): rawFormat {
 
 export interface RawFormatNormalizerTransformOptions extends TransformOptions {
   debug: boolean;
+  checkBuild: boolean;
 }
 
 export class RawFormatNormalizerTransform extends Transform {
   genotypeStarted = false;
   headerLines: string[] = [];
   format: rawFormat = 'other';
+
   debug = false;
+  checkBuild = false;
 
   warnings = new Set<string>();
 
@@ -75,6 +78,7 @@ export class RawFormatNormalizerTransform extends Transform {
   constructor(opts?: RawFormatNormalizerTransformOptions) {
     super(opts);
     if (opts?.debug === true) this.debug = true;
+    if (opts?.checkBuild === true) this.checkBuild = true;
     this.on(EVENTS.HEADER, header => {
       this.format = guessFormat(header);
     });
@@ -96,10 +100,10 @@ export class RawFormatNormalizerTransform extends Transform {
   ): void {
     if (this.lineCount === 0) {
       //emit header
-      this.push('#rsid\tchr\tposition\tbase\n');
+      this.push('#rsid\tchromosome\tposition\tgenotype\n');
     }
     this.lineCount++;
-    const str = String(chunk);
+    const str = typeof chunk === 'string' ? chunk : String(chunk);
     if (!this.genotypeStarted) {
       if (str[0] === '#' || str.match(/rsid|chromosome|chr/i) !== null) {
         this.headerLines.push(str);
@@ -112,6 +116,7 @@ export class RawFormatNormalizerTransform extends Transform {
     if (this.genotypeStarted) {
       try {
         const snp = convertLine2Snp(str);
+        //const snp: Snp = { chr: '1', position: 1, rsid: 'rskjo', nocall: false, a1: 'A', a2: 'T'};
         if (snp.chr === 'XY') throw new Error('Skip pseudoautosomal XY');
         this.push(
           `${snp.rsid}\t${snp.chr}\t${snp.position}\t${snp.a1}${
@@ -137,10 +142,13 @@ export class RawFormatNormalizerTransform extends Transform {
           this.warn(snp.warn);
         }
         this.chromosomes.add(snp.chr);
+        
         // build 37 38
-        const build = checkBuildForSnp(snp);
-        if (build === 'b37') this.snpInfo.b37++;
-        else if (build === 'b38') this.snpInfo.b38++;
+        if (this.checkBuild) {
+          const build = checkBuildForSnp(snp);
+          if (build === 'b37') this.snpInfo.b37++;
+          else if (build === 'b38') this.snpInfo.b38++;
+        }
       } catch (e) {
         this.warn(e + '');
       }
@@ -165,12 +173,14 @@ export class RawFormatNormalizerTransform extends Transform {
     if (this.chromosomes.size < 23) {
       errors.push(ERROR_MISSING_CHROMOSOMES);
     }
-    if (this.snpInfo.b37 > 0 && this.snpInfo.b38 > 0) {
-      errors.push(ERROR_GENOME_BUILD_MIX);
-    } else if (this.snpInfo.b37 === 0 && this.snpInfo.b38 === 0) {
-      errors.push(ERROR_GENOME_BUILD_NOT_DETECTED);
-    } else if (this.snpInfo.b37 < 25 && this.snpInfo.b38 < 25) {
-      errors.push(ERROR_GENOME_BUILD_NOT_ENOUGH);
+    if (this.checkBuild) {
+      if (this.snpInfo.b37 > 0 && this.snpInfo.b38 > 0) {
+        errors.push(ERROR_GENOME_BUILD_MIX);
+      } else if (this.snpInfo.b37 === 0 && this.snpInfo.b38 === 0) {
+        errors.push(ERROR_GENOME_BUILD_NOT_DETECTED);
+      } else if (this.snpInfo.b37 < 25 && this.snpInfo.b38 < 25) {
+        errors.push(ERROR_GENOME_BUILD_NOT_ENOUGH);
+      }
     }
     if (this.snpInfo.hetRatio > 60 || this.snpInfo.hetRatio < 10) {
       errors.push(ERROR_HET_RATIO);
