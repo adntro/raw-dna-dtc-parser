@@ -4,7 +4,7 @@ const log = console.log
 const error = console.error
 
 async function main(filepath) {
-  const transformer = new RawFormatNormalizerTransform();
+  const transformer = new RawFormatNormalizerTransform({ checkBuild: true });
 
   let i = 0;
   let start = 0;

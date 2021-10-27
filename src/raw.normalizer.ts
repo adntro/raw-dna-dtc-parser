@@ -29,6 +29,8 @@ export function guessFormat(header: string): rawFormat {
   const h = String(header).toLowerCase();
   if (h.indexOf('23andme') > -1) {
     return '23andme';
+  } else if (h.indexOf('adntro') > -1) {
+    return 'adntro';
   } else if (h.indexOf('myheritage') > -1) {
     return 'myHeritage';
   } else if (h.indexOf('living dna') > -1 || h.indexOf('livingdna') > -1) {

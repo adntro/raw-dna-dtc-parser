@@ -23,6 +23,9 @@ function guessFormat(header) {
     if (h.indexOf('23andme') > -1) {
         return '23andme';
     }
+    else if (h.indexOf('adntro') > -1) {
+        return 'adntro';
+    }
     else if (h.indexOf('myheritage') > -1) {
         return 'myHeritage';
     }

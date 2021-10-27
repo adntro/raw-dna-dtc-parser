@@ -1,4 +1,5 @@
 export type rawFormat =
+  | 'adntro'
   | '23andme'
   | 'myHeritage'
   | 'ancestryDNA'
