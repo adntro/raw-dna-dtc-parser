@@ -18,6 +18,16 @@ export interface RawFormatNormalizerTransformOptions extends TransformOptions {
     debug: boolean;
     checkBuild: boolean;
 }
+/** minimum votes of the minority build to consider the file a real mix */
+export declare const BUILD_MIX_MIN_VOTES = 5;
+/** minimum share of the total votes for the minority build to mean a mix */
+export declare const BUILD_MIX_MIN_RATIO = 0.05;
+/** minimum votes needed to trust the detected build */
+export declare const BUILD_MIN_VOTES = 25;
+/** minimum evaluated positions before reporting a strand flip */
+export declare const STRAND_FLIP_MIN_EVALUATED = 20;
+/** share of mismatching alleles that means the whole file is flipped */
+export declare const STRAND_FLIP_MIN_RATIO = 0.8;
 export declare class RawFormatNormalizerTransform extends Transform {
     genotypeStarted: boolean;
     headerLines: string[];

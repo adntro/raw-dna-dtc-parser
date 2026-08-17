@@ -391,20 +391,37 @@ export const chrposB38: {
   }))
   .reduce((ac, i) => ({...ac, [i.chrpos]: i}), {});
 
-export function checkBuildForSnp(snp: Snp): genomeBuild | undefined {
-  if (!snp || snp.nocall) return undefined;
+export interface BuildHit {
+  /** build of the reference table the position belongs to, if any */
+  build: genomeBuild | undefined;
+  /** whether a1 is one of the alleles the reference expects at that position */
+  alleleMatch: boolean;
+}
+
+/**
+ * The position decides the build: the b37 and b38 position sets of the table do
+ * not overlap, so a position can only belong to one of them. The alleles are
+ * reported apart, because a file can carry the coordinates of one build with the
+ * letters of the other (a liftover that repositions without complementing), and
+ * that must not make the vote disappear.
+ */
+export function checkBuildForSnp(snp: Snp): BuildHit {
+  const miss: BuildHit = {build: undefined, alleleMatch: false};
+  if (!snp || snp.nocall) return miss;
   const chrpos = snp.chr + ':' + snp.position;
-  if (
-    chrposB37[chrpos] &&
-    (chrposB37[chrpos].ref === snp.a1 || chrposB37[chrpos].alt === snp.a1)
-  ) {
-    return 'b37';
-  } else if (
-    chrposB38[chrpos] &&
-    (chrposB38[chrpos].ref === snp.a1 || chrposB38[chrpos].alt === snp.a1)
-  ) {
-    return 'b38';
-  } else {
-    return undefined;
+  const ref37 = chrposB37[chrpos];
+  if (ref37) {
+    return {
+      build: 'b37',
+      alleleMatch: ref37.ref === snp.a1 || ref37.alt === snp.a1,
+    };
   }
+  const ref38 = chrposB38[chrpos];
+  if (ref38) {
+    return {
+      build: 'b38',
+      alleleMatch: ref38.ref === snp.a1 || ref38.alt === snp.a1,
+    };
+  }
+  return miss;
 }

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RawFormatNormalizerTransform = exports.guessFormat = exports.EVENTS = void 0;
+exports.RawFormatNormalizerTransform = exports.STRAND_FLIP_MIN_RATIO = exports.STRAND_FLIP_MIN_EVALUATED = exports.BUILD_MIN_VOTES = exports.BUILD_MIX_MIN_RATIO = exports.BUILD_MIX_MIN_VOTES = exports.guessFormat = exports.EVENTS = void 0;
 const stream_1 = require("stream");
 const genome_build_1 = require("./utils/genome-build");
 const raw_errors_1 = require("./raw.errors");
@@ -43,6 +43,16 @@ function guessFormat(header) {
     }
 }
 exports.guessFormat = guessFormat;
+/** minimum votes of the minority build to consider the file a real mix */
+exports.BUILD_MIX_MIN_VOTES = 5;
+/** minimum share of the total votes for the minority build to mean a mix */
+exports.BUILD_MIX_MIN_RATIO = 0.05;
+/** minimum votes needed to trust the detected build */
+exports.BUILD_MIN_VOTES = 25;
+/** minimum evaluated positions before reporting a strand flip */
+exports.STRAND_FLIP_MIN_EVALUATED = 20;
+/** share of mismatching alleles that means the whole file is flipped */
+exports.STRAND_FLIP_MIN_RATIO = 0.8;
 class RawFormatNormalizerTransform extends stream_1.Transform {
     constructor(opts) {
         super(opts);
@@ -65,6 +75,8 @@ class RawFormatNormalizerTransform extends stream_1.Transform {
             hetRatio: -1,
             b37: 0,
             b38: 0,
+            alleleMatch: 0,
+            alleleMismatch: 0,
         };
         this.chromosomes = new Set();
         if ((opts === null || opts === void 0 ? void 0 : opts.debug) === true)
@@ -134,11 +146,17 @@ class RawFormatNormalizerTransform extends stream_1.Transform {
                 this.chromosomes.add(snp.chr);
                 // build 37 38
                 if (this.checkBuild) {
-                    const build = genome_build_1.checkBuildForSnp(snp);
-                    if (build === 'b37')
+                    const hit = genome_build_1.checkBuildForSnp(snp);
+                    if (hit.build === 'b37')
                         this.snpInfo.b37++;
-                    else if (build === 'b38')
+                    else if (hit.build === 'b38')
                         this.snpInfo.b38++;
+                    if (hit.build) {
+                        if (hit.alleleMatch)
+                            this.snpInfo.alleleMatch++;
+                        else
+                            this.snpInfo.alleleMismatch++;
+                    }
                 }
             }
             catch (e) {
@@ -149,7 +167,6 @@ class RawFormatNormalizerTransform extends stream_1.Transform {
     }
     _flush(callback) {
         this.snpInfo.hetRatio = Math.floor((100 * this.snpInfo.het) / this.snpInfo.total);
-        const warnings = Array.from(this.warnings.values());
         const errors = [];
         let gender;
         if (this.snpInfo.x > 0 && this.snpInfo.xHet / this.snpInfo.x > 0.01) {
@@ -163,20 +180,30 @@ class RawFormatNormalizerTransform extends stream_1.Transform {
             errors.push(raw_errors_1.ERROR_MISSING_CHROMOSOMES);
         }
         if (this.checkBuild) {
-            if (this.snpInfo.b37 > 0 && this.snpInfo.b38 > 0) {
+            const votes = this.snpInfo.b37 + this.snpInfo.b38;
+            const minority = Math.min(this.snpInfo.b37, this.snpInfo.b38);
+            if (votes > 0 &&
+                minority >= exports.BUILD_MIX_MIN_VOTES &&
+                minority / votes >= exports.BUILD_MIX_MIN_RATIO) {
                 errors.push(raw_errors_1.ERROR_GENOME_BUILD_MIX);
             }
-            else if (this.snpInfo.b37 === 0 && this.snpInfo.b38 === 0) {
+            else if (votes === 0) {
                 errors.push(raw_errors_1.ERROR_GENOME_BUILD_NOT_DETECTED);
             }
-            else if (this.snpInfo.b37 < 25 && this.snpInfo.b38 < 25) {
+            else if (votes < exports.BUILD_MIN_VOTES) {
                 errors.push(raw_errors_1.ERROR_GENOME_BUILD_NOT_ENOUGH);
+            }
+            const evaluated = this.snpInfo.alleleMatch + this.snpInfo.alleleMismatch;
+            if (evaluated >= exports.STRAND_FLIP_MIN_EVALUATED &&
+                this.snpInfo.alleleMismatch / evaluated >= exports.STRAND_FLIP_MIN_RATIO) {
+                this.warn(raw_errors_1.WARN_ALLELES_STRAND_FLIPPED);
             }
         }
         if (this.snpInfo.hetRatio > 60 || this.snpInfo.hetRatio < 10) {
             errors.push(raw_errors_1.ERROR_HET_RATIO);
         }
         //
+        const warnings = Array.from(this.warnings.values());
         const validationInfo = {
             build: this.snpInfo.b38 > this.snpInfo.b37 ? 'b38' : 'b37',
             rawFormat: this.format,

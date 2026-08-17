@@ -25,6 +25,10 @@ export interface SnpInfo {
     hetRatio: number;
     b37: number;
     b38: number;
+    /** positions of the build reference table whose alleles match the reference */
+    alleleMatch: number;
+    /** positions of the build reference table whose alleles do not match */
+    alleleMismatch: number;
 }
 export interface ValidationInfo {
     build: genomeBuild;

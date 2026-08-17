@@ -383,21 +383,33 @@ exports.chrposB38 = queryResultJson
     alt: alt_38,
 }))
     .reduce((ac, i) => ({ ...ac, [i.chrpos]: i }), {});
+/**
+ * The position decides the build: the b37 and b38 position sets of the table do
+ * not overlap, so a position can only belong to one of them. The alleles are
+ * reported apart, because a file can carry the coordinates of one build with the
+ * letters of the other (a liftover that repositions without complementing), and
+ * that must not make the vote disappear.
+ */
 function checkBuildForSnp(snp) {
+    const miss = { build: undefined, alleleMatch: false };
     if (!snp || snp.nocall)
-        return undefined;
+        return miss;
     const chrpos = snp.chr + ':' + snp.position;
-    if (exports.chrposB37[chrpos] &&
-        (exports.chrposB37[chrpos].ref === snp.a1 || exports.chrposB37[chrpos].alt === snp.a1)) {
-        return 'b37';
+    const ref37 = exports.chrposB37[chrpos];
+    if (ref37) {
+        return {
+            build: 'b37',
+            alleleMatch: ref37.ref === snp.a1 || ref37.alt === snp.a1,
+        };
     }
-    else if (exports.chrposB38[chrpos] &&
-        (exports.chrposB38[chrpos].ref === snp.a1 || exports.chrposB38[chrpos].alt === snp.a1)) {
-        return 'b38';
+    const ref38 = exports.chrposB38[chrpos];
+    if (ref38) {
+        return {
+            build: 'b38',
+            alleleMatch: ref38.ref === snp.a1 || ref38.alt === snp.a1,
+        };
     }
-    else {
-        return undefined;
-    }
+    return miss;
 }
 exports.checkBuildForSnp = checkBuildForSnp;
 //# sourceMappingURL=genome-build.js.map
