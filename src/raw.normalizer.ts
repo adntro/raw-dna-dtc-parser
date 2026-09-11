@@ -214,7 +214,7 @@ export class RawFormatNormalizerTransform extends Transform {
         this.warn(WARN_ALLELES_STRAND_FLIPPED);
       }
     }
-    if (this.snpInfo.hetRatio > 60 || this.snpInfo.hetRatio < 10) {
+    if (this.snpInfo.hetRatio > 60 || this.snpInfo.hetRatio < 8) {
       errors.push(ERROR_HET_RATIO);
     }
     //
